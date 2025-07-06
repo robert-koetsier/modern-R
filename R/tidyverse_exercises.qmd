@@ -18,14 +18,20 @@ abstract: |
 ```{r package-installation, include=FALSE}
 # Install packages if they are not installed yet
 
+# On my local windows PC I never have problems with package installation speed. 
+# However, I know that this can be an issue on other systems, so we use pak for
+# package installation. 
+if (!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
+
 # For setting working directory and project management
-if (!requireNamespace("here", quietly = TRUE)) install.packages("here")
-if (!requireNamespace("quarto", quietly = TRUE)) install.packages("quarto")
+if (!requireNamespace("here", quietly = TRUE))      pak::pkg_install("here")
+if (!requireNamespace("whereami", quietly = TRUE))  pak::pkg_install("whereami")
+if (!requireNamespace("quarto", quietly = TRUE))    pak::pkg_install("quarto")
 # Other packages
-if (!requireNamespace("tidyverse", quietly = TRUE)) install.packages("tidyverse")
-if (!requireNamespace("shiny", quietly = TRUE)) install.packages("shiny")
-if (!requireNamespace("ggpubr", quietly = TRUE)) install.packages("ggpubr")
-if (!requireNamespace("ggsci", quietly = TRUE)) install.packages("ggsci")
+if (!requireNamespace("tidyverse", quietly = TRUE)) pak::pkg_install("tidyverse")
+if (!requireNamespace("shiny", quietly = TRUE))     pak::pkg_install("shiny")
+if (!requireNamespace("ggpubr", quietly = TRUE))    pak::pkg_install("ggpubr")
+if (!requireNamespace("ggsci", quietly = TRUE))     pak::pkg_install("ggsci")
 ```
 
 ## Load libraries
@@ -75,14 +81,14 @@ library(tidyverse)
 ```{r}
 # Assuming this script can be found nested in a project directory
 if (interactive()) {
-  # In Rstudio
+  # In Rstudio 
+  whereami::whereami() %>% here::i_am()
   wd <- here::here()
 } else {
   # When knitting
   wd <- quarto::quarto_inspect()$dir
 }
 
-message("Working directory: ", shQuote(wd))
 # Set working directory
 knitr::opts_knit$set(root.dir = normalizePath(wd))
 ```
