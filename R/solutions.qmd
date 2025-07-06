@@ -1,0 +1,873 @@
+---
+title: "Modern R data analysis"
+author: "Robert Koetsier"
+format: html
+date: "2025-07-01"
+date-modified: last-modified
+execute:
+    eval: false
+abstract: |
+    In this document you will find several exercises that will help you become 
+    familiar with the functions that are available in the tidyverse packages. 
+    You will work with gene expression data of _Arabidopsis thaliana_ 
+    plants, and several associated analyses. To learn more about the 
+    The biological context and available data you can check the preprint of the 
+    associated publication 
+    [(Artur et al., 2024)](https://www.biorxiv.org/content/10.1101/2024.11.04.621888v1) 
+    or our [web app](https://www.bioinformatics.nl/SeedMatExplorer/). 
+---
+
+```{r package-installation, include=FALSE}
+# Install packages if they are not installed yet
+
+# For setting working directory and project management
+if (!requireNamespace("here", quietly = TRUE)) install.packages("here")
+if (!requireNamespace("quarto", quietly = TRUE)) install.packages("quarto")
+# Other packages
+if (!requireNamespace("tidyverse", quietly = TRUE)) install.packages("tidyverse")
+if (!requireNamespace("shiny", quietly = TRUE)) install.packages("shiny")
+if (!requireNamespace("ggpubr", quietly = TRUE)) install.packages("ggpubr")
+if (!requireNamespace("ggsci", quietly = TRUE)) install.packages("ggsci")
+```
+
+## Load libraries
+
+Note that running `library(tidyverse)` will load the functions of the core 
+tidyverse packages: `ggplot2`, `dplyr`, `tidyr`, `readr`, `purrr`, `tibble`, 
+`stringr`, and `forcats`.
+
+Here a summary from the tidyverse website:
+
+* `ggplot2` is a system for declaratively creating graphics, based on The 
+Grammar of Graphics. You provide the data, tell ggplot2 how to map variables to 
+aesthetics, what graphical primitives to use, and it takes care of the details. 
+* `dplyr` provides a grammar of data manipulation, providing a consistent set of 
+verbs that solve the most common data manipulation challenges. 
+* `tidyr` provides a set of functions that help you get to tidy data. Tidy data 
+is data with a consistent form: in brief, every variable goes in a column, and 
+every column is a variable. 
+* `readr` provides a fast and friendly way to read rectangular data (like csv, 
+tsv, and fwf). It is designed to flexibly parse many types of data found in the 
+wild, while still cleanly failing when data unexpectedly changes.  
+* `purrr` enhances R’s functional programming (FP) toolkit by providing a 
+complete and consistent set of tools for working with functions and vectors. 
+Once you master the basic concepts, purrr allows you to replace many for loops 
+with code that is easier to write and more expressive. 
+* `tibble` is a modern re-imagining of the data frame, keeping what time has 
+proven to be effective, and throwing out what it has not. Tibbles are data.frames 
+that are lazy and surly: they do less and complain more forcing you to confront 
+problems earlier, typically leading to cleaner, more expressive code. 
+* `stringr` provides a cohesive set of functions designed to make working with 
+strings as easy as possible. It is built on top of stringi, which uses the ICU C 
+library to provide fast, correct implementations of common string manipulations. 
+* `forcats` provides a suite of useful tools that solve common problems with 
+factors. R uses factors to handle categorical variables, variables that have a 
+fixed and known set of possible values. 
+* `lubridate` provides a set of functions for working with date-times, extending
+and improving on R's existing support for them. 
+
+We will make use of functions from most of these packages in this document. 
+
+```{r libraries, message=FALSE, warning=FALSE}
+library(tidyverse) 
+```
+
+## Set working directory
+
+```{r}
+# Assuming this script can be found nested in a project directory
+if (interactive()) {
+  # In Rstudio
+  wd <- here::here()
+} else {
+  # When knitting
+  wd <- quarto::quarto_inspect()$dir
+}
+
+message("Working directory: ", shQuote(wd))
+# Set working directory
+knitr::opts_knit$set(root.dir = normalizePath(wd))
+```
+
+## General remarks before you start
+
+* I recommend working on this document in an interactive environment 
+(e.g., RStudio). In Rstudio, you can run an entire code chunk by placing your 
+cursor inside it and pressing Ctrl + Shift + Enter (Windows/Linux) or 
+Cmd + Shift + Enter (Mac). To run just a portion of code (e.g., a part of your
+tidyverse pipeline), highlight it and press Ctrl + Enter (Windows/Linux) or 
+Cmd + Enter (Mac). This helps you quickly explore the output of parts of your 
+code.
+* In some cases, you may want to learn more about how a certain tidyverse function 
+is used. The check the function's help page you can type a question mark 
+followed by the function name, like `?filter` or `?ggplot` in the R console. 
+This opens the documentation, where you’ll find a description of the function, 
+its arguments, examples, and related functions.You can also use the help() 
+function, e.g., help(mutate), which does the same thing.
+* In R, you can access functions from a package either by loading the package 
+with `library()` or by using the `::` operator. When you use `library(ggpubr)`, all 
+functions from that package become available in your session, so you can call 
+them directly—for example, `theme_pubr()`. Alternatively, you can access a specific 
+function from a package using the `packageName::functionName` syntax, like 
+`ggpubr::theme_pubr()`. This approach doesn’t load the entire package—just that one 
+is used. Using `::` can be helpful if you only need a single function or want to 
+it clear which package it comes from, especially when multiple packages define 
+with the same name.
+* Using the pipe shortcut (`|>` or `%>%`): In RStudio, you can quickly insert 
+the pipe operator by pressing Ctrl + Shift + M (or Cmd + Shift + M on Mac). 
+This is a very handy shortcut when writing Tidyverse code, as the pipe is used 
+frequently to chain together operations in a readable way.
+* R indexing starts at 1: Unlike many other programming languages (like Python 
+C), R uses 1-based indexing. This means that the first element of a vector or 
+list is accessed with x[1], not x[0]. Keep this in mind when working with 
+positions in data structures.
+* In this document, we use Tidyverse pipelines for nearly every operation. While 
+this approach has several advantages—such as improved readability, consistency, and 
+better feedback when things go wrong—it's perfectly fine to combine Tidyverse 
+code with base R in your own scripts if you find that more convenient. Since the 
+goal of this document is to introduce Tidyverse functions, the examples are 
+intentionally focused on using those rather than base R alternatives.
+
+## Chapter 1 - Basic tidyverse pipeline
+
+We will start with some simple data transformations so you become familiar with 
+building tidyverse pipelines. You will learn to use some of the most universally
+useful `dplyr` verbs such as `select()`, `filter()`, `mutate()` and `group_by`.
+
+In this section, we’ll work with the results of a differential expression 
+analysis performed using `DESeq2`. We'll summarize how many genes are 
+differentially expressed when comparing different time points.
+
+* AGI = Arabidopsis gene identifier, 
+* gene = gene name, 
+* baseMean = mean of normalized counts for all samples, 
+* log2FC = log2 fold change (MLE), 
+* lfcSE = standard error, 
+* stat = Wald statistic, 
+* pvalue = Wald test p-value without adjustment, 
+* padj = BH adjusted p-values, 
+* description = gene function description.
+
+### Loading and understanding the DE data
+
+We will first load a single output file so you can become familiar with the data. 
+The code below does not need any modification, simply run it and explore columns
+that are found in the data frame. Note that printing that the data in Rstudio,
+as we do below, will provide you with an interactive data view that allows you 
+to explore more columns or rows. 
+
+```{r}
+# Get a vector of all paths to DE output files.
+de_paths <- list.files(
+  path = "data/unprocessed/DE results/",
+  pattern = "*.tsv",
+  full.names = TRUE
+)
+
+# Load the first one
+de1 <- read_tsv(de_paths[1])
+
+de1 # Print to preview
+```
+
+::: {.callout-note icon=false}
+### Assignment 1
+
+Build a tidyverse pipeline that:
+
+1. Keeps only the columns AGI, log2FC, and padj. Use `select()` for this
+2. Keeps only rows in which the BH adjusted p-value, `padj`, is smaller than alpha.
+      For this step you can use `filter()`.
+3. Add a new column 'regulation', which will be populated by values "up" and
+      "down", depending on positive or negative values of log2FC. For this
+      step, use `mutate(regulation = if_else(your_condition, true_value, false_value))`.
+4. Group by up or down-regulated genes using `group_by()`.
+5. Finally, pipe to `count()` to see the size of your group.
+
+Tip: Implement only a single step at once, and then run the entire code chunk
+to see whether you succeeded, before adding more complexity.
+:::
+
+```{r}
+alpha <- 0.05
+
+# de_counts <- de1 |>
+#     select() # ... etc
+
+de_counts
+```
+
+::: {.callout-caution collapse="true"}
+### Expand To View Solution
+
+```{r}
+de_counts <- de1 |>
+  select(AGI, log2FC, padj) |>
+  filter(padj < alpha) |>
+  mutate(regulation = if_else(log2FC < 0, "down", "up")) |>
+  group_by(regulation) |>
+  count()
+```
+
+:::
+
+### Simple barchart
+
+Let's visualize your result with ggplot2. So far, this plot might feel somewhat 
+redundant. We will make it more interesting in a next step.
+
+```{r}
+ggplot(de_counts, aes(x = regulation, y = n, fill = regulation)) +
+  geom_col() +
+  ggpubr::theme_pubr(x.text.angle = 45, legend = "right") +
+  ggsci::scale_fill_nejm()
+```
+
+### Full DE dataset
+
+```{r}
+# Read all DE output files at once
+de_data_list <- set_names(de_paths, nm = basename(de_paths)) |> # Named vector of paths
+  # Read all files, output is a named list of tibbles (tidyverse version of data frames)
+  map(read_tsv, show_col_types = FALSE)
+```
+
+::: {.callout-note icon=false}
+### Assignment 2
+1. Clean up the labels in the comparison column (e.g., to '12d vs 14d', etc).
+      There are multiple ways of doing this, but one straightforward option is
+      to slice the string using `str_sub()`. Check the help of this function to
+      learn how to use it. You can update your column using:
+      `mutate(comparison = str_sub(comparison, ...more_args...))`
+2. Complete the data processing in the same way as you did for the single
+      file above. You might notice that it is easy to reuse parts of your 
+      pipeline. However, don't drop the 'comparison' column as we will need it.
+      Note that your final counts should show the number of up- and
+      down-regulated genes for each comparison (so: modify the `group_by` step).
+:::
+
+```{r}
+# Complete the following 
+de_counts_all <- de_data_list |>
+  # Create a single, very long table
+  bind_rows(.id = "comparison") # |> # add your code below
+
+de_counts_all
+```
+
+::: {.callout-caution collapse="true"}
+### Expand To View Solution
+
+```{r}
+de_counts_all <- de_data_list |>
+  # Create a single, very long table
+  bind_rows(.id = "comparison") |>
+  mutate(comparison = str_sub(comparison, start = 9, end = -5)) |>
+  select(comparison, AGI, log2FC, padj) |>
+  filter(padj < alpha) |>
+  mutate(regulation = if_else(log2FC < 0, "down", "up")) |>
+  group_by(comparison, regulation) |>
+  count() 
+```
+:::
+
+
+::: {.callout-note icon=false}
+### Assignment 3
+Create the same plot as above, adapting the code to change the input data, 
+and the aesthetic mapping for x, so the different comparisons are shown 
+separately.
+
+Tip: If you want up and down to be shown side-by-side, use:
+      `geom_col(position = position_dodge()) +`
+:::
+
+```{r}
+# ggplot(...) + # Complete plotting
+
+```
+
+::: {.callout-caution collapse="true"}
+### Expand To View Solution
+
+```{r}
+ggplot(de_counts_all, aes(x = comparison, y = n, fill = regulation)) +
+  geom_col(position = position_dodge()) +
+  ggpubr::theme_pubr(x.text.angle = 45, legend = "right") +
+  ggsci::scale_fill_nejm()
+```
+:::
+
+
+::: {.callout-note icon=false}
+### Bonus challenge
+Can you come up with a way to show the number of down-regulated genes on the
+negative side of the y-axis?
+
+If you need help getting started, one option would be to modify (`mutate`) 
+the 'n' column, converting n to negative values in every row where regulation 
+is "down" (if_else can help).
+
+If you want the labels on the negative side of the y-axis to appear positive,
+use add `+ scale_y_continuous(labels = function(x) abs(x))` to your plot
+:::
+
+```{r}
+# -- your solution --
+
+```
+
+::: {.callout-caution collapse="true"}
+### Expand To View Solution
+
+```{r}
+de_counts_all |>
+  mutate(n = if_else(regulation == "down", -1 * n, n)) |>
+  ggplot(aes(x = comparison, y = n, fill = regulation)) +
+  geom_col() +
+  ggpubr::theme_pubr(x.text.angle = 45, legend = "right") +
+  ggsci::scale_fill_nejm() +
+  scale_y_continuous(labels = function(x) abs(x))
+```
+:::
+
+## Chapter 2 - Reshaping data, data joining, computing data summaries
+
+We will continue with a different dataset to master more of the common steps in 
+tidyverse workflows. Here, we use time-series RNA-seq count data that were generated 
+for various mutants of _Arabidopsis thaliana_. We will explore the expression 
+of a specific set of genes. 
+
+Among other things, this workflow will teach you how to select columns using
+the tidy-select syntax, reshape data using `pivot_longer()` and `pivot_wider`, 
+add metadata with `left_join()`, and aggregate group data using `summarize()`.
+
+### Load expression data
+
+First we load the gene expression data and some additional information that we 
+will need. You can run the following code without modification.
+
+```{r}
+# Gene expression data for all timepoints and mutants
+counts <- read_csv("data/unprocessed/RNA seq counts/raw counts.csv")
+# More information about the samples
+sample_info <- read_csv("data/unprocessed/RNA seq counts/sample info.csv")
+# Genes that are relevant for seed longevity based on literature. From
+# this table we can extract target genes for our workflow.
+longevity_genes <- read_tsv(
+    file = "data/unprocessed/Literature data/Longevity related genes.tsv"
+)
+
+# Vector with the names of all metadata column, which will be useful later
+meta_cols <- names(sample_info)
+
+# Optionally, print any of the new tables to inspect which columns they contain
+longevity_genes
+# sample_info
+```
+
+### Select genes of interest
+
+::: {.callout-note icon=false}
+### Assignment 4
+Create a vector `gene_selection` that contains the identifiers of the genes 
+highlighted by the "Renard 2020" study. For this:
+
+1. Use `filter()` to subset rows, keeping only those relating to the correct study.
+2. Use `pull()` for extract values from a single column.
+:::
+
+```{r}
+# Create a vector with gene names
+# gene_selection <- longevity_genes |> # complete this
+
+# Print to verify, should look like: [1] "AT4G02770" "AT3G17520" ... etc.
+gene_selection 
+```
+
+::: {.callout-caution collapse="true"}
+### Expand To View Solution
+
+```{r}
+gene_selection <- longevity_genes |>
+  filter(Source == "Renard 2020") |>
+  pull(ID)
+```
+:::
+
+### Convert expression data to tidy format
+
+If you explored our variable `counts` earlier, you may have noticed that the 
+samples are shown as columns and the genes as rows. While this is a common 
+format and it can be useful, it is not tidy, since our variables (genes) should 
+be the columns, and the observations (samples) should be rows. We will reshape our data 
+so that the genes are shown as columns and each row represents a sample.
+
+::: {.callout-note icon=false}
+### Assignment 5
+Reshape the gene expression data `counts` and assign the result to the variable
+`counts_tidy`. One way to accomplish this would be the following: 
+
+```{r, eval=FALSE}
+counts_tidy <- counts |>
+    column_to_rownames("gene_id") |>
+    t() |>
+    as_tibble() |>
+    rownames_to_column("sample")
+```
+
+If you prefer that solution, that is completely fine. However, using `t()` to
+transpose the data is generally not very compatible with tidyverse workflows, 
+since it requires us to use row names and returns a matrix instead of tibble 
+(tidyverse data frame). Generally, row names are intentionally avoided in the 
+tidyverse, since they are basically a character column with different semantics 
+than every other column. 
+
+We will instead practice reshaping our data with `pivot_longer()` and 
+`pivot_wider()` which are the main workhorses to convert your data if it is not
+tidy. 
+
+1. Use `pivot_longer()` to convert your data into a long format with 3 columns:
+'gene_id' (as before); 'Sample', containing all names of the columns with 
+expression values; and 'Count', with the actual expression values from those 
+columns. In addition to supplying your data to the `pivot_longer()` function, you
+will need to use the 'cols', 'names_to' and 'values_to' arguments. You can learn 
+how to use this on the help page of `pivot_longer()`. Note that 'cols' supports
+tidyselect, which can help you to select all columns except 'gene_id', you can 
+learn more about tidy select options by check the appropriate help page, using: 
+`?tidyr_tidy_select`.
+2. Pipe the output of the previous step into `pivot_wider()`. I recommend using 
+this function with the 'names_from' and 'values_from' arguments. Using this step, 
+you want to create an output table in which each gene is represented by a single 
+column in your output.
+:::
+
+```{r}
+# counts_tidy <- counts |> # complete with pivot_longer and pivot_wider
+
+counts_tidy
+```
+
+::: {.callout-caution collapse="true"}
+### Expand To View Solution
+
+```{r}
+counts_tidy <- counts |> 
+  pivot_longer(!gene_id, names_to = "Sample", values_to = "Count") |>
+  pivot_wider(names_from = gene_id, values_from = Count)
+```
+:::
+
+Note that having to use both `pivot_longer` and `pivot_wider` together does not
+happen very often, but it was good practice. More frequently, you'll need to 
+apply only one of the transformations. Generally, my impression is that 
+`pivot_longer` is required more often. 
+
+### Adding metadata, selecting genes
+
+One of the advantages of having converted our data into a tidy format is that 
+we can very easily add more columns with metadata that describes the samples. 
+We already have a separate table with this metadata, so we can easily add this 
+into our new `counts_tidy` data frame. 
+
+::: {.callout-note icon=false}
+### Assignment 6
+
+1. Combine the expression data with additional metadata (stored in the 
+`sample_info` variable), by using `left_join()`.
+2. For the next steps we want to explore only a subset of the genes, namely the
+longevity related genes that we previously selected (`gene_selection`). Use
+`select()` to keep only the metadata columns (names can be found in `meta_cols`),
+and the genes of interest. Combining vectors in R can be done with 
+`c(vector1, vector2)`. Also note that there is a tidy select helper function to 
+select columns based on a character vector of column names (more info on 
+`?tidyr_tidy_select`).
+:::
+
+```{r}
+# counts_selection <- counts_tidy |> # complete the workflow
+    
+```
+
+::: {.callout-caution collapse="true"}
+### Expand To View Solution
+
+```{r}
+counts_selection <- counts_tidy |>
+  left_join(sample_info, by = "Sample") |>
+  select(all_of(c(meta_cols, gene_selection)))
+```
+:::
+
+### Calculating mean gene expression
+
+Our expression data contains some replicates for every sampled time-point. 
+For some analyses, and also for data visualization, it can be useful to calculate
+the mean expression expression for each gene across the replicates. 
+
+Let's start by exploring how this works for a single gene.
+
+::: {.callout-note icon=false}
+### Assignment 7
+
+We will explore the use of the `summarize()` function, which is used whenever we 
+calculate summary statistics based on the group structure of our data. For 
+example, we may want to know the mean and standard deviation of a gene's expression 
+across replicates. We use `summarize()` because we are reducing the number of 
+rows in our dataset. Initially, the three replicates of a single group each occupy 
+one row; after calculating the mean, we have only a single value representing 
+the group. This reduction in the number of rows is the main difference compared 
+to `mutate()`, which is used when create or transforming variables while keeping
+the row number equal.
+
+1. (Optional, but makes things easier to follow) Subset the columns to select only 
+the ones we will be using: Genotype, DAP, and gene AT4G02770. You probably 
+remember the function that you can use for this ;).
+2. The replicates all share the same genotype and timepoint (DAP, Days after pollination), 
+so group by the corresponding variables.
+3. Use summarize to get the mean and standard deviation of gene expression of 
+every group. Use the function as follows:     
+`... |> summarize(expression_mean = mean(AT4G02770), expression_sd = sd(AT4G02770))`
+:::
+
+```{r}
+# No need to create a new variable, we just want to print the output 
+# to demonstrate this step.
+# counts_selection |>  # Complete based on the instructions above.
+    
+```
+
+::: {.callout-caution collapse="true"}
+### Expand To View Solution
+
+```{r}
+counts_selection |> 
+    select(Genotype, DAP, AT4G02770) |> 
+    group_by(Genotype, DAP) |> 
+    summarize(expression_mean = mean(AT4G02770), expression_sd = sd(AT4G02770))
+```
+:::
+
+To calculate the mean and standard deviation of gene expression for all our 
+selected genes there are multiple options. We could use `across()` inside the
+`summarize()` function for column-wise operations, but this is, IMO, generally 
+harder to work with. 
+
+Instead, I recommend to convert the data into the long format, which simplifies 
+the calculation of summary statistics. In addition, this long format is easy to
+use for plotting with ggplot2. 
+
+::: {.callout-note icon=false}
+### Assignment 8
+
+1. Convert `counts_selection` into a long format, where all gene expression values
+are stacked in a single column called "count", and all the names of the genes are
+found in the column "AGI". 
+2. Group by AGI, Genotype, and DAP.
+3. Calculate mean and sd of gene expression as you did in the example above, the 
+names of the new summary columns should be the same as above if you don't want 
+to modify my plotting code in the next step.
+:::
+
+
+```{r}
+# mean_expression <- counts_selection |>  # Complete based on the instructions above.
+
+mean_expression
+```
+
+::: {.callout-caution collapse="true"}
+### Expand To View Solution
+
+```{r}
+mean_expression <- counts_selection |>
+  pivot_longer(all_of(gene_selection), names_to = "AGI", values_to = "Count") |>
+  group_by(AGI, Genotype, DAP) |>
+  summarize(expression_mean = mean(Count), expression_sd = sd(Count))
+```
+:::
+
+### Visualize gene expression
+
+As I mentioned, our summarized gene expression can be easily used with ggplot2.
+Run the below code to visualize your gene's expression.
+
+```{r}
+ggplot(
+    data = mean_expression, 
+    mapping = aes(x = DAP, y = expression_mean, color = Genotype, group = Genotype)
+) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(
+    mapping = aes(
+      ymin = expression_mean - expression_sd,
+      ymax = expression_mean + expression_sd
+    ), 
+    width = 0.5
+  ) +
+  facet_wrap(vars(AGI), scales = "free_y") +
+  ggsci::scale_color_d3("category20") +
+  ggpubr::theme_pubr(base_size = 8)
+```
+
+### Visualization tricks
+
+While I do think that it is most intuitive, and best for learning, you do not 
+need to calculate mean and sd yourself if your end-goal is data visualization 
+with ggplot. The 'stat' components of ggplot can transform your data for you. 
+For transformations similar to what we have done above, we can use `stat_summary()`
+to build a ggplot layer.
+
+Here a demonstration for a single gene.
+
+```{r}
+ggplot(counts_selection, 
+       aes(x = DAP, 
+           y = AT4G02770, 
+           color = Genotype, 
+           group = Genotype)) +
+    stat_summary(fun = mean, geom = "point" ) + 
+    stat_summary(fun = mean, geom = "line" ) + 
+    stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2) +
+    labs(title = "AT4G02770", y = "Expression (counts)") +
+    ggsci::scale_color_d3("category20") +
+    ggpubr::theme_pubr(legend = "right")
+```
+
+It is generally easy to convert the above code into a function that can plot any gene
+that is found in our dataset. However, when programming our own functions that use 
+tidyverse functionalities we need to be aware of indirection. You can read more
+on the topic in the 'Indirection' section in this document
+`vignette("programming", "dplyr")`. For now, let's just put this into practice 
+with an example.
+
+::: {.callout-note icon=false}
+### Assignment 9
+
+The plotting function below is almost complete, we only need to link the 
+arguments of `plot_expression` to the `ggplot()` function call.
+
+1. Replace every `NULL` in the function below with `.data[[your_var]]`, to 
+ensure that the character strings that are stored in function's arguments are
+evaluated in the context of your data. 
+:::
+
+
+```{r}
+plot_expression <- function(
+        y_axis_var, 
+        plot_data = counts_selection,
+        x_axis_var = "DAP", 
+        group_var = "Genotype",
+        y_axis_label = "Expression (counts)"
+) {
+    ggplot(plot_data, 
+           aes(x = NULL, 
+               y = NULL, 
+               color = NULL, 
+               group = NULL)) +
+        stat_summary(fun = mean, geom = "point" ) + 
+        stat_summary(fun = mean, geom = "line" ) + 
+        stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2) +
+        labs(title = y_axis_var, y = y_axis_label) +
+        ggsci::scale_color_d3("category20") +
+        ggpubr::theme_pubr(legend = "right")
+}
+    
+# counts_selection |> names() 
+plot_expression("AT2G45970")
+```
+
+::: {.callout-caution collapse="true"}
+### Expand To View Solution
+
+```{r}
+plot_expression <- function(
+        y_axis_var, 
+        plot_data = counts_selection,
+        x_axis_var = "DAP", 
+        group_var = "Genotype",
+        y_axis_label = "Expression (counts)"
+) {
+    ggplot(plot_data, 
+           aes(x = .data[[x_axis_var]], 
+               y = .data[[y_axis_var]], 
+               color = .data[[group_var]], 
+               group = .data[[group_var]])) +
+        stat_summary(fun = mean, geom = "point" ) + 
+        stat_summary(fun = mean, geom = "line" ) + 
+        stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2) +
+        labs(title = y_axis_var, y = y_axis_label) +
+        ggsci::scale_color_d3("category20") +
+        ggpubr::theme_pubr(legend = "right")
+}
+```
+:::
+
+To illustrate how we can use our new function, let's apply it to the vector of 
+gene names that we selected at some point.
+
+```{r}
+plot_list <- map(gene_selection, plot_expression)
+
+# Combine a list of plots
+ggpubr::ggarrange(
+    plotlist = plot_list[1:4], 
+    common.legend = T, 
+    legend = "right", 
+    labels = "AUTO"
+)
+```
+
+Another use case would be to create an interactive app, which can be as simple
+this:
+
+```{r, eval=FALSE}
+library(shiny)
+
+ui <- fluidPage(
+    selectInput(
+        inputId = "gene_in", 
+        label = "Choose a gene:", 
+        choices = gene_selection, 
+        selected = gene_selection[1]
+    ),
+    plotOutput("plot_expr")
+)
+
+server <- function(input, output, session) {
+    output$plot_expr <- renderPlot({
+        plot_expression(input$gene_in) 
+    })
+}
+
+shinyApp(ui, server)
+```
+
+If you like working with ggplot but would prefer a more interactive version of 
+your plots, it's good to know that you can provide your plot to the 
+`plotly::ggplotly()` function. You can even integrate the result of this in your 
+interactive Shiny apps, but instead of `plotOutput()` and `renderPlot()`, you would 
+have to use `plotlyOutput()` in the UI and `renderPlotly()` in the server 
+component. `ggplotly()` works most of the time, but edge cases like ggplot
+layers from additional packages might not be supported, also 
+`stat_summary(geom = "line")` as we used in our example somehow does not appear 
+in the visualization with `ggplotly()`.
+
+## Chapter 3
+
+The previous assignments cover the most essential concepts, and while preparing 
+this workshop I did not expect you would have time to work on another chapter. 
+However, if you have time left you can explore the below code and see 
+whether you can follow what is happening, possibly discovering some more useful
+functions for your next tidyverse data processing workflow!
+
+The goal of the analysis below is to find out whether any transcription factor 
+families are disproportionately represented among the longevity-associated TFs 
+we've identified in some previous analysis.
+
+### Data loading
+
+```{r}
+# Load database of all arabidopsis TFs
+tf_fams <- read_tsv("data/unprocessed/TF overrpresentation/Ath_TF_list.txt") %>% 
+  select(-TF_ID) %>% 
+  distinct() # remove those that have the same gene id and family
+
+# Load TFs that stand our from our analysis
+tfs <- read_csv("data/unprocessed/TF overrpresentation/Longevity and DT TFs.csv")
+
+long_tfs <- tfs |> 
+    filter(Trait == "longevity") 
+
+tf_fams
+long_tfs
+```
+
+### Data preparation
+
+```{r}
+tfdb_trait_join <- full_join(tf_fams, long_tfs) 
+
+# Note the NAs
+slice_tail(tfdb_trait_join, n = 10) 
+```
+
+
+```{r}
+tfdb_trait <- tfdb_trait_join |>
+    mutate(Family = replace_na(Family, "not_in_TFDB")) |> 
+    mutate(is_longevity_tf = if_else(Trait == "longevity", T, F, missing = F), .keep = "unused")
+    
+tfdb_trait |> 
+    group_by(AGI) |> 
+    filter(n() > 1) |> 
+    arrange(AGI)
+
+# Lets check whether within the group there are any duplicates
+tfdb_trait |> 
+    group_by(AGI, Family) |> 
+    count() |> 
+    arrange(desc(n))
+```
+
+### Apply overrepresenation test
+
+```{r}
+total_long_tfs <- nrow(long_tfs)
+total_n_tfs <- tfdb_trait |> 
+    pull(AGI) |> 
+    unique() |> 
+    length()
+
+fisher_result <- tfdb_trait |> 
+    group_by(Family) |> 
+    summarize( 
+        total_n_family = n(),
+        in_in = sum(is_longevity_tf),
+        in_fam_not_in_trait = n() - sum(is_longevity_tf),
+        not_in_fam_in_trait = total_long_tfs - sum(is_longevity_tf),
+        out_out = total_n_tfs - n() - (total_long_tfs - sum(is_longevity_tf))
+    ) |> 
+    rowwise() |> 
+    mutate(cont_table = list(
+        matrix(c(in_in, 
+                 in_fam_not_in_trait, 
+                 not_in_fam_in_trait, 
+                 out_out), nrow=2)
+    )) |> 
+    mutate(fisher_pval = fisher.test(cont_table, alternative="greater")$p.value) |> 
+    mutate(fisher_padj = p.adjust(fisher_pval, method = "BH")) |> 
+    mutate(signif = if_else(fisher_padj < 0.05, "*", ""))
+
+fisher_result
+```
+
+### Visualize 
+
+```{r, fig.height=7, fig.width=4}
+ggplot() +
+    geom_bar(
+        data = tfdb_trait, 
+        mapping = aes(x = Family, fill = is_longevity_tf),
+    ) +
+    geom_text(
+        data = fisher_result, 
+        mapping = aes(x = Family, y = total_n_family + 5, label = signif),
+        color = "red", 
+        vjust = 0.6
+    ) +
+    scale_fill_manual(values = c("grey", ggpubr::get_palette("nejm", 1))) +
+    scale_x_discrete(limits = rev) +
+    coord_flip() +
+    labs(y = "# transcription factors", fill = "Longevity TFs") +
+    ggpubr::theme_pubr(base_size = 10) +
+    theme(axis.text.y = element_text(size = 7))
+```
+
+## Session Info
+
+```{r}
+sessionInfo()
+```

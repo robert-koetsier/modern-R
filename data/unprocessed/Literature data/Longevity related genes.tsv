@@ -1,0 +1,83 @@
+Gene	ID	Source	Description 
+ABI3	AT3G24650	Lepinic 2018; Sugliani 2009	"Regulators - TFs - seed viability after 4 years of storage was extremely
+low for both severe and leaky alleles (Clerkx et al.
+2004), and a high sensitivity to CDT was also observed in
+abi3-1 seeds (Mao and Sun 2015)."
+ABI4	AT2G40220	Zinsmeiter 2016	Regulators - TFs
+ABI5	AT2G36270	Zinsmeiter 2016	Regulators - TFs
+LEC1	AT1G21970	Lepinic 2018; Sugliani 2009	Regulators - TFs
+HSFA9	AT5G54070	"Kotak et al. 2007, Zinsmeister 2020"	Regulators - TFs
+GOLS1	AT2G47180	Vidigal 2016	Non reducing sugars
+GOLS2	AT1G56600	Vidigal 2016	Non reducing sugars
+Raffinose synthase	AT5G40390	Vidigal 2016	Non reducing sugars
+Stachiose synthase	AT4G01970	Vidigal 2016	Non reducing sugars
+AGAL	AT5G08380	Vidigal 2016	Non reducing sugars
+PSAD1	AT4G02770	Renard 2020	Positive to longevity
+SSLEA	AT3G17520	Renard 2020	Positive to longevity
+SSTPR	AT4G02750	Renard 2020	Positive to longevity
+DHAR1	AT1G19570	Renard 2020	Positive to longevity
+CYP86A8	AT2G45970	Renard 2020	Positive to longevity
+MYB47	AT1G18710	Renard 2020	Positive to longevity
+SPCH	AT5G53210	Renard 2020	Positive to longevity
+RBOHD	AT5G47910	Renard 2020	Negative to longevity
+RBOHE	AT1G19230	Renard 2020	Negative to longevity
+RBOHF	AT1G64060	Renard 2020	Negative to longevity
+KNAT7	AT1G62990 	Renard 2020	Negative to longevity
+SEP3	AT1G24260	Renard 2020	Negative to longevity
+LEA14	AT2G21490	Hundertmark 2011	reduction of seed-specific dehydrins reduces seed longevity in Arabidopsis thaliana
+XERO1	AT3G50980	Hundertmark 2011	reduction of seed-specific dehydrins reduces seed longevity in Arabidopsis thaliana
+RAB18	AT5G66400	Hundertmark 2011	reduction of seed-specific dehydrins reduces seed longevity in Arabidopsis thaliana
+VTE1	AT4G32770	Sattler 2004	Tocopherol biosynthesis
+VTE2	AT2G18950	Sattler 2004	Tocopherol biosynthesis
+AtCHL	AT3G47860	Boca 2014	Lipocalins
+AtTIL	AT5G58070	Boca 2014	Lipocalins
+AtFAHD1a	AT4G15940	Gerna 2021	REDOX regulation - increased longevity
+aberrant testa shape (ATS)	AT5G42630	Clerkx 2004	Seed coat - mutation cause reduced longevity
+ABA1	AT5G67030	Clerkx 2004	
+Cruciferin A (CRUA)	AT5G44120	Nguyen 2015	Antioxidants - Cruciferin - triple mutant has reduced longevity
+Cruciferin B (CRUB)	AT1G03880	Nguyen 2015	Antioxidants - Cruciferin - triple mutant has reduced longevity
+Cruciferin C (CRUC)	AT4G28520	Nguyen 2015	Antioxidants - Cruciferin - triple mutant has reduced longevity
+TIP3.1	AT1G73190	Mao 2014	Modulation of aquaporins - Double mutant has reduced longevity
+TIP3.2	AT1G17810	Mao 2014	Modulation of aquaporins - Double mutant has reduced longevity
+AtOGG1	AT1G21710	Chen et al. 2012	"DNA repair - Transgenic lines overexpressing AtOGG1 contained
+significantly reduced levels of 8-oxoG in 24 h imbibed seeds and
+showed enhanced resistance to CDT compared with the wild
+type, indicating that AtOGG1-mediated BER plays an important
+role in seed longevity"
+PARP3	AT5G22470	Rissel et al. 2014	DNA repair - parp3-1 mutant was susceptible to CDT compared with the wild type
+AtLIG4	AT5G57160	Waterworth et al. 2010	"DNA repair -  Arabidopsis mutant defective in DNA ligase IV (AtLIG4) and the plant-specific DNA ligase termed AtLIG6 had reduced viability after CDT compared
+with the wild type"
+AtLIG6	AT1G66730	Waterworth et al. 2010	"DNA repair -  Arabidopsis mutant defective in DNA ligase IV (AtLIG4) and the plant-specific DNA ligase termed AtLIG6 had reduced viability after CDT compared
+with the wild type"
+MSRB1	AT1G53670	Chatelain et al. 2012	Protein repair
+MSRB2	AT4G21860	Chatelain et al. 2012	Protein repair
+AtPIMT1	AT3G48330	Oge et al. 2008	"Protein repair - overexpression reduced isoAsp accumulation in seed proteins and increased seed longevity, whereas reduced AtPIMT1 levels were associated with increased isoAsp contents and loss of seed viability during CDT"
+AtPIMT2	AT5G50240	"Mudgett and Clarke 1996, Xu et al. 2004"	Protein repair
+ROF1	AT3G25230	Bissoli et al. 2012	Protein repair
+ROF2	AT5G48570	Bissoli et al. 2012	Protein repair
+SUA	AT3G54230	Sugliani et al. 2010	Improved longevity
+SNRK2.2	AT3G50500	NAKASHIMA ET AL. 2009	"Tripple mutant is DS, non dormant and green,. Short lived seeds"
+SNRK2.3	AT5G66880	NAKASHIMA ET AL. 2009	"Tripple mutant is DS, non dormant and green,. Short lived seeds"
+SNRK2.6	AT4G33950	NAKASHIMA ET AL. 2009	"Tripple mutant is DS, non dormant and green,. Short lived seeds"
+AtHB25	AT5G65410	Bueso et al. 2014	
+TT4	AT5G13930	Clerkx et al. 2004	Seed coat - mutation cause reduced longevity
+WRKY3	AT2G03340	"Righetti et al. 2015, Debeaujon et al. 2000"	Seed coat - mutants have increased testa permeability and reduced longevity
+NFLX1	AT1G10170	"Righetti et al. 2015, Debeaujon et al. 2000"	Seed coat - mutants have increased testa permeability and reduced longevity
+TT10	AT5G48100	Debeaujon et al 2000	Seed coat - mutation cause reduced longevity
+	AT5G53260	LEA in turquoise module from all genotype WGCNA	
+	AT2G01080	LEA in turquoise module from all genotype WGCNA	
+	AT5G06330	LEA in turquoise module from all genotype WGCNA	
+	AT4G36600	LEA in turquoise module from all genotype WGCNA	
+ATECP31	AT3G22500	LEA in turquoise module from all genotype WGCNA	
+M17	AT2G41260	LEA in turquoise module from all genotype WGCNA	
+XERO1	AT3G50980	LEA in turquoise module from all genotype WGCNA	
+	AT2G18340	LEA in turquoise module from all genotype WGCNA	
+RAB18	AT5G66400	LEA in turquoise module from all genotype WGCNA	
+LEA18	AT2G35300	LEA in turquoise module from all genotype WGCNA	
+LTI30	AT3G50970	LEA in turquoise module from all genotype WGCNA	
+	AT2G23110	LEA in turquoise module from all genotype WGCNA	
+	AT3G22490	LEA in turquoise module from all genotype WGCNA	
+M10	AT2G41280	LEA in turquoise module from all genotype WGCNA	
+GEA6	AT2G40170	LEA in turquoise module from all genotype WGCNA	
+LEA14	AT1G01470	LEA in turquoise module from all genotype WGCNA	
+	AT3G53040	LEA in turquoise module from all genotype WGCNA	

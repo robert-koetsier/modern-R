@@ -1,0 +1,11 @@
+project:
+  execute-dir: project
+execute:
+  cache: true
+format:
+  html:
+    toc: true
+    theme: sandstone
+    embed-resources: true
+language:
+  title-block-published: "Created"
